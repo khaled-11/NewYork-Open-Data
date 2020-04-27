@@ -1,0 +1,14 @@
+<%- include("header") -%>
+
+<ul>
+
+  <% for (const user of model) { %>
+    <li>
+      <%= user.userName %>
+      <em>(<%= user.userEmail %>)</em>
+    </li>
+  <% } %>
+
+</ul>
+
+<%- include("footer") -%>

@@ -16,19 +16,52 @@ app.use(bodyParser.urlencoded({extended : true}));
 app.use(bodyParser.json());
 require('dotenv').config()
 
-app.get('/', function(request, response) {
-	response.sendFile(path.join(__dirname + '/login.html'));
-});
-app.get('/register', function(request, response) {
-	response.sendFile(path.join(__dirname + '/register.html'));
-});
-app.get('/update', function(request, response) {
-	response.sendFile(path.join(__dirname + '/update.html'));
-});
-app.get('/delete', function(request, response) {
-	response.sendFile(path.join(__dirname + '/delete.html'));
+app.set("views", path.join(__dirname, "views"));
+app.use(express.static(path.join(__dirname, "public")));
+app.set("view engine", "ejs");
+
+app.get('/login', function(request, response) {
+    if (!request.session.loggedin) {
+        response.render("login");
+    } else {
+		response.send('You are already logged in!');
+	}
+	response.end();
 });
 
+app.get('/register', function(request, response) {
+    if (!request.session.loggedin) {
+        response.render("register");
+    } else {
+		response.send('You are already logged in!');
+	}
+	response.end();
+});
+
+app.get('/logout', function(request, response) {
+    if (request.session.loggedin) {
+      request.session.destroy()
+      response.clearCookie('connect.sid')
+      response.render("logout");
+    } else {
+	  response.send('You are not logged in!');
+    }
+    response.end();
+  });
+
+app.get('/', function(request, response) {
+	response.render("index");
+});
+
+app.get("/books", (req, res) => {
+    const sql = "SELECT * FROM user"
+    nodeDB.all(sql, [], (err, rows) => {
+      if (err) {
+        return console.error(err.message);
+      }
+      res.render("books", { model: rows });
+    });
+  });
 
 //Creating a database and table
 file_path = "./nodeDB.sqlite"
@@ -41,15 +74,15 @@ let nodeDB = new sqlite3.Database(file_path, (err) => {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             userName text, 
             userPassword text, 
-			userEmail text UNIQUE, 
-			CONSTRAINT name_unique UNIQUE (userName),
-            CONSTRAINT email_unique UNIQUE (userEmail)
+			userEmail text
             )`,
+            //CONSTRAINT name_unique UNIQUE (userName),
+            //CONSTRAINT email_unique UNIQUE (userEmail)
             (err) => {
                 if (err) {
                     console.log("Database Exist");
                 }else{
-					userN = process.env.USER
+                    userN = process.env.USER
 					pass = md5(process.env.PASS);
 					console.log(pass);
                     nodeDB.run("INSERT INTO user (userName, userPassword, userEmail) VALUES ('"+userN+"', '"+pass+"', 'test@test.com')")
@@ -60,14 +93,17 @@ let nodeDB = new sqlite3.Database(file_path, (err) => {
 
   app.post('/register', function(request, res) {
 	var username = request.body.username;
-	var email = request.body.email;
+    var email = request.body.email;
+    console.log(email)
+    console.log(username)
+    console.log(request.body.password)
 	var password = md5(request.body.password);
 	console.log(password)
 	if (username && password && email) {
-		nodeDB.run("INSERT INTO user (userName, userPassword, userEmail) VALUES ('"+username+"', '"+password+"', '"+email+"')")
-		request.session.loggedin = true;
+            nodeDB.run("INSERT INTO user (userName, userPassword, userEmail) VALUES ('"+username+"', '"+password+"', '"+email+"')")
+        request.session.loggedin = true;
 		request.session.username = username;
-		res.redirect('/home');
+		res.redirect('/');
 	} else {
 		res.send('Please enter all the required information!');
 		res.end();
@@ -85,7 +121,7 @@ app.post('/auth', function(request, response) {
             if (results.length > 0) {
 				request.session.loggedin = true;
 				request.session.username = username;
-				response.redirect('/home');
+				response.redirect('/');
 			} else {
 				response.send('Incorrect Username and/or Password!');
 			}			
@@ -97,10 +133,14 @@ app.post('/auth', function(request, response) {
 	}
 });
 
-app.get('/home', function(request, response) {
+
+
+
+
+app.get('/data', function(request, response) {
 	if (request.session.loggedin) {
-			response.sendFile(path.join(__dirname + '/Data.html'));
-	} else {
+        response.render("data");
+    	} else {
 		response.send('Please login to view this page!');
 	}
 	response.end();
