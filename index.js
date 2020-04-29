@@ -5,6 +5,7 @@ var bodyParser = require('body-parser');
 var path = require('path');
 var md5 = require('md5');
 var fs = require('fs');
+var Request = require("request");
 //var CryptoJS = require("crypto-js");
 const request = require('request');
 var app = express();
@@ -31,32 +32,20 @@ app.get('/login', function(request, response) {
 });
 
 
-var Request = require("request");
+
 
 Request.get({
+   // https://data.cityofnewyork.us/resource/h9gi-nx95.json?crash_date=2012-07-01T00:00:00.000
     "url": "https://data.cityofnewyork.us/resource/h9gi-nx95?$$app_token=Kwn7E7Q4egk7mGBF7iqjThzNR",
 }, (error, response, body) => {
     if(error) {
         return console.dir(error);
     }
     let dataReceived = JSON.parse(body);
-    // for(var j = 0; j < 3; j++)
-    // {
-       // console.dir(dataReceived[j].crash_date);
-        console.log(dataReceived.length);
-        console.log(dataReceived[3]);
-
-    //     console.log(dataReceived[crash_date]);
-    // }    
-    // fs.writeFile(`./data.json`, dataReceived, function (err) {
-    //     if (err) {
-    //           console.log("An error occured while writing JSON Object to File.");
-    //           return console.log(err);
-    //       }
-    //       console.log("Done"); 
-    //   });
-    // console.dir(dataReceived[1]);
-});
+    for(var j = 0; j < dataReceived.length; j++)
+    {
+   
+}});
 
 
 
