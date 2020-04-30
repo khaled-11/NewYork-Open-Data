@@ -23,73 +23,19 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
 app.set("view engine", "ejs");
 
-
-nodeDB.run(`CREATE TABLE IF NOT EXISTS data (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    crash_date ,
-    crash_time,
-    borough,
-    zip_code,
-    latitude,
-    longitude,
-    location,
-    street_name,
-    off_street_name,
-    cross_street_name,
-    number_of_persons_injured,
-    number_of_persons_killed,
-    number_of_pedestrians_injured,
-    number_of_pedestrians_killed,
-    number_of_cyclist_injured,
-    number_of_cyclist_killed,
-    number_of_motorist_injured,
-    number_of_motorist_killed,
-    contributing_factor_vehicle_1,
-    contributing_factor_vehicle_2,
-    contributing_factor_vehicle_3,
-    contributing_factor_vehicle_4,
-    contributing_factor_vehicle_5,
-    collision_id,
-    vehicle_type_code1,
-    vehicle_type_code2,
-    vehicle_type_code_3,
-    vehicle_type_code_4,
-    vehicle_type_code_5
-    )`,
-    (err) => {
-        if (err) {
-            console.log("Database Exist");
-        }else{
-            userN = process.env.USER
-            pass = md5(process.env.PASS);
-            console.log(pass);
-            nodeDB.run("INSERT INTO user (userName, userPassword, userEmail) VALUES ('"+userN+"', '"+pass+"', 'test@test.com')")
-        }
-    });  
-
-
-Request.get({
-   // https://data.cityofnewyork.us/resource/h9gi-nx95.json?crash_date=2012-07-01T00:00:00.000
-    "url": "https://data.cityofnewyork.us/resource/h9gi-nx95?$$app_token=Kwn7E7Q4egk7mGBF7iqjThzNR",
-}, (error, response, body) => {
-    if(error) {
-        return console.dir(error);
-    }
-    let dataReceived = JSON.parse(body);
-    for(var j = 0; j < dataReceived.length; j++)
-    {
-   
-}});
-
-
-
-// Intialize a local database and create the required tables. Inserting initial Demo user to the user table. //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                           MAIN FUNCTION                                                   //
+// Intialize and connecting to a local database. Create user table and insert initial Demo user to the table //
+//               Sending Get Request to retrieve a 5000 enteries Data sample for Car Crushes                 //                                  
+//                              Create Table for the Data from NYC OPEN DATA                                 //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 file_path = "./nodeDB.sqlite"
 let nodeDB = new sqlite3.Database(file_path, (err) => { 
     if (err) { 
         console.log('Error when creating the database', err) 
     } else { 
         console.log(`Database created!`)
+        // Creating Data Table for users data //
         nodeDB.run(`CREATE TABLE user (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             userName text, 
@@ -99,16 +45,48 @@ let nodeDB = new sqlite3.Database(file_path, (err) => {
             //CONSTRAINT name_unique UNIQUE (userName),
             (err) => {
                 if (err) {
-                    console.log("Database Exist");
+                    console.log("User Table Exists");
                 }else{
+                    console.log("User Table was Created");
                     userN = process.env.USER
 					pass = md5(process.env.PASS);
 					console.log(pass);
                     nodeDB.run("INSERT INTO user (userName, userPassword, userEmail) VALUES ('"+userN+"', '"+pass+"', 'test@test.com')")
                 }
-            });  
-    } 
-  });
+            });
+            // Creating Data Table for NYC OPEN DATA //
+            nodeDB.run(`CREATE TABLE crash_data (
+                collision_id integer PRIMARY KEY,
+                crash_date text,
+                crash_time text,
+                borough text,
+                zip_code text,
+                on_street_name text,
+                number_of_persons_injured text,
+                number_of_persons_killed text,
+                contributing_factor_vehicle_1 text,
+                vehicle_type_code1 text
+                )`,
+                (err) => {
+                    if (err) {
+                        console.log("Data Table Exists");
+                    }else{
+                        console.log("Data Table was Created");
+                        Request.get({
+                            // https://data.cityofnewyork.us/resource/h9gi-nx95.json?crash_date=2012-07-01T00:00:00.000
+                             "url": "https://data.cityofnewyork.us/resource/h9gi-nx95?$$app_token=Kwn7E7Q4egk7mGBF7iqjThzNR&$limit=2000",
+                         }, (error, response, body) => {
+                             if(error) {
+                                 return console.dir(error);
+                             }
+                             let dataReceived = JSON.parse(body);
+                             for(var j = 0; j < dataReceived.length; j++)
+                             {
+                                 nodeDB.run(
+                                    "INSERT INTO crash_data(collision_id,crash_date,crash_time,borough,zip_code,on_street_name,number_of_persons_injured,number_of_persons_killed,contributing_factor_vehicle_1, vehicle_type_code1) VALUES('"+dataReceived[j].collision_id+"','"+dataReceived[j].crash_date+"','"+dataReceived[j].crash_time+"','"+dataReceived[j].borough+"','"+dataReceived[j].zip_code+"','"+dataReceived[j].on_street_name+"','"+dataReceived[j].number_of_persons_injured+"','"+dataReceived[j].number_of_persons_killed+"','"+dataReceived[j].contributing_factor_vehicle_1+"','"+dataReceived[j].vehicle_type_code1+"')")
+                         }});                   
+                }});    
+    }});
 
   // Post request for web registeration. It will add the user name, password and email to the database //
   app.post('/register', function(request, res) {
@@ -152,27 +130,25 @@ app.post('/auth', function(request, response) {
 	}
 });
 
-// Sending Data page and restrict to users in session //
-app.get('/data', function(request, response) {
-	if (request.session.loggedin) {
-        response.render("data");
-    	} else {
-		response.send('Please login to view this page!');
-	}
-	response.end();
-});
 
 
-app.get("/books", (req, res) => {
-    const sql = "SELECT * FROM user"
+// Reading Data From the Database and sending the Data Page if session is active //
+app.get("/data", function(req, res) {  
+   // if (req.session.loggedin) {
+    const sql = "SELECT * FROM crash_data"
     nodeDB.all(sql, [], (err, rows) => {
       if (err) {
         return console.error(err.message);
       }
-      res.render("books", { model: rows });
+      res.render("data", { model: rows });
     });
-  });
-  
+ // }
+  //else {
+    //res.send('Please login to view this page!');
+  //  res.end();
+//}
+});
+
 // Sending Login Page if there is no active session //
 app.get('/login', function(request, response) {
     if (!request.session.loggedin) {

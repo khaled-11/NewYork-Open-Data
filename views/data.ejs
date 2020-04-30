@@ -1,14 +1,14 @@
 <%- include("header") -%>
 
-<ul>
+<ol>
 
-  <% for (const user of model) { %>
+  <% for (const crash_data of model) { %>
     <li>
-      <%= user.userName %>
-      <em>(<%= user.userEmail %>)</em>
+      <%= crash_data.collision_id %>
+      <em>(<%= crash_data.crash_date %>)</em>
     </li>
   <% } %>
 
-</ul>
+</ol>
 
 <%- include("footer") -%>
