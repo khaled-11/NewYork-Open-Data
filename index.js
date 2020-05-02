@@ -148,12 +148,12 @@ app.post('/auth', function(request, response) {
 				request.session.username = username;
 				response.redirect('/');
 			} else {
-				response.send('Incorrect Username and/or Password!');
+        response.render("incorrect");
 			}			
 			response.end();
 		});
 	} else {
-		response.render("incorrect");
+		response.send('Please enter Username and Password!');
 		response.end();
 	}
 });
@@ -171,7 +171,7 @@ app.get("/data", function(req, res) {
     });
   }
   else {
-    res.render("not-logged");
+      res.render("not-logged");
     res.end();
 }
 });

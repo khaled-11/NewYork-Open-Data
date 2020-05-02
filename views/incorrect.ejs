@@ -1,5 +1,13 @@
 <%- include("header") -%>
 
 <h1>The User/Password is not correct!</h1>
-
+<br>
+<div class="register-form">
+    <h1>Try Again</h1>
+    <form action="auth" method="POST">
+        <input type="text" name="username" placeholder="Username" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <input type="submit" value="Login">
+    </form>
+</div>
 <%- include("footer") -%>
