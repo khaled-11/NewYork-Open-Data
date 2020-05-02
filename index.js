@@ -171,7 +171,7 @@ app.get("/data", function(req, res) {
     });
   }
   else {
-    res.send('Please login to view this page!');
+    res.render("not-logged");
     res.end();
 }
 });
@@ -205,7 +205,7 @@ app.get('/login', function(request, response) {
     if (!request.session.loggedin) {
         response.render("login");
     } else {
-		response.send('You are already logged in!');
+      response.render("logged-in");
 	}
 	response.end();
 });
@@ -215,8 +215,8 @@ app.get('/register', function(request, response) {
     if (!request.session.loggedin) {
         response.render("register");
     } else {
-		response.send('You are already logged in!');
-	}
+      response.render("logged-in");
+    }
 	response.end();
 });
 
@@ -225,7 +225,7 @@ app.get('/profile', function(request, response) {
     if (request.session.loggedin) {
         response.render("profile");
     } else {
-		response.send('You are not logged in!');
+		response.render("not-logged");
 	}
 	response.end();
 });
@@ -237,7 +237,7 @@ app.get('/logout', function(request, response) {
       response.clearCookie('connect.sid')
       response.render("logout");
     } else {
-	  response.send('You are not logged in!');
+      response.render("not-logged");
     }
     response.end();
   });
