@@ -1,4 +1,4 @@
-// Include the required libraries for
+// Including the required libraries //
 const sqlite3 = require('sqlite3').verbose();
 var express = require('express');
 var session = require('express-session');
@@ -6,8 +6,8 @@ var bodyParser = require('body-parser');
 var path = require('path');
 var md5 = require('md5');
 //var fs = require('fs');
-var Request = require("request");
 //var CryptoJS = require("crypto-js");
+var Request = require("request");
 var app = express();
 app.use(session({
 	secret: 'secret',
@@ -19,7 +19,7 @@ app.use(bodyParser.urlencoded({extended : true}));
 app.use(bodyParser.json());
 require('dotenv').config()
 
-// Setting the View and resources Folder. Choosing the EJS module. //
+// Setting the View and resources Folder. Choosing the EJS module for rendering. //
 app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
 app.set("view engine", "ejs");
@@ -27,7 +27,7 @@ app.set("view engine", "ejs");
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                           MAIN FUNCTION                                                   //
 // Intialize and connecting to a local database. Create user table and insert initial Demo user to the table //
-//               Sending Get Request to retrieve a 5000 enteries Data sample for Car Crushes                 //                                  
+//               Sending Get Request to retrieve a 1250 enteries Data sample for Car Crushes                 //                                  
 //                              Create Table for the Data from NYC OPEN DATA                                 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 file_path = "./nodeDB.sqlite"
@@ -75,7 +75,7 @@ let nodeDB = new sqlite3.Database(file_path, (err) => {
                         console.log("Data Table was Created");
                         Request.get({
                             // https://data.cityofnewyork.us/resource/h9gi-nx95.json?crash_date=2012-07-01T00:00:00.000
-                             "url": "https://data.cityofnewyork.us/resource/h9gi-nx95?$$app_token=Kwn7E7Q4egk7mGBF7iqjThzNR&$limit=2000",
+                             "url": "https://data.cityofnewyork.us/resource/h9gi-nx95?$$app_token=Kwn7E7Q4egk7mGBF7iqjThzNR&$limit=1250",
                          }, (error, response, body) => {
                              if(error) {
                                  return console.dir(error);
@@ -89,7 +89,7 @@ let nodeDB = new sqlite3.Database(file_path, (err) => {
                 }});    
     }});
 
-  // Post request for User Profile. It will change the email or delete the user from the database //
+  // Post request for User Profile. It will change the user password in the database //
   app.post('/profile', function(request, res) {
     console.log(request.body.password);
 	var password = md5(request.body.password);
@@ -106,7 +106,7 @@ let nodeDB = new sqlite3.Database(file_path, (err) => {
 	}
 });
 
-  // Post request for User Profile. It will change the email or delete the user from the database //
+  // Post request for deleting user. It will delete the user from the database //
   app.post('/delete', function(request, res) {
         name = request.session.username;  
         console.log(name);
@@ -116,15 +116,6 @@ let nodeDB = new sqlite3.Database(file_path, (err) => {
         nodeDB.run(`DELETE FROM user WHERE userName = ?`, [name])
         res.end();
 	});
-
-// DELETE FROM table_name
-// WHERE column_name = value;
-
-
-// UPDATE table_name
-// SET column_name = value_1
-// WHERE id = id_value;
-
 
   // Post request for web registeration. It will add the user name, password and email to the database //
   app.post('/register', function(request, res) {
@@ -149,8 +140,7 @@ let nodeDB = new sqlite3.Database(file_path, (err) => {
 // Post request for web login. If the user name and password found in the database, the session will established with the user name //
 app.post('/auth', function(request, response) {
 	var username = request.body.username;
-    var password = md5(request.body.password);
-    	
+    var password = md5(request.body.password);  	
 	if (username && password) {
 		nodeDB.all("SELECT * FROM user WHERE userName = '"+username+"' AND userPassword = '"+password+"'", function(error, results, fields) {
             if (results.length > 0) {
@@ -168,15 +158,10 @@ app.post('/auth', function(request, response) {
 	}
 });
 
-//
-//
-// Need to Change.
-//
-//
 
 // Reading Data From the Database and sending the Data Page if session is active //
 app.get("/data", function(req, res) {  
-   // if (req.session.loggedin) {
+    if (req.session.loggedin) {
     const sql = "SELECT * FROM crash_data"
     nodeDB.all(sql, [], (err, rows) => {
       if (err) {
@@ -184,13 +169,14 @@ app.get("/data", function(req, res) {
       }
       res.render("data", { model: rows });
     });
- // }
-  //else {
-    //res.send('Please login to view this page!');
-  //  res.end();
-//}
+  }
+  else {
+    res.send('Please login to view this page!');
+    res.end();
+}
 });
 
+// Get the delete page for the specific entry //
 app.get("/delete/:id", (req, res) => {
     const id = req.params.id;
     const sql = "SELECT * FROM crash_data WHERE collision_id = ?";
@@ -202,6 +188,7 @@ app.get("/delete/:id", (req, res) => {
     });
   });
   
+ // Post request to delete the Entry from the crash_data table // 
 app.post("/delete/:id", (req, res) => {
     const id = req.params.id;
     const sql = "DELETE FROM crash_data WHERE collision_id = ?";
