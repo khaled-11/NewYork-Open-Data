@@ -14,6 +14,7 @@ app.use(session({
 	resave: true,
 	saveUninitialized: true
 }));
+
 app.use(bodyParser.urlencoded({extended : true}));
 app.use(bodyParser.json());
 require('dotenv').config()
@@ -88,6 +89,43 @@ let nodeDB = new sqlite3.Database(file_path, (err) => {
                 }});    
     }});
 
+  // Post request for User Profile. It will change the email or delete the user from the database //
+  app.post('/profile', function(request, res) {
+    console.log(request.body.password);
+	var password = md5(request.body.password);
+	if (password) {
+        name = request.session.username;  
+        nodeDB.run(`UPDATE user SET userPassword = ? WHERE userName = ?`, [password, name])
+        console.log(name);
+        console.log(password);
+        res.render("changed");
+        res.end();
+	} else {
+		res.send('Please enter all the required information!');
+		res.end();
+	}
+});
+
+  // Post request for User Profile. It will change the email or delete the user from the database //
+  app.post('/delete', function(request, res) {
+        name = request.session.username;  
+        console.log(name);
+        request.session.destroy()
+        res.clearCookie('connect.sid')
+        res.render("deleted");
+        nodeDB.run(`DELETE FROM user WHERE userName = ?`, [name])
+        res.end();
+	});
+
+// DELETE FROM table_name
+// WHERE column_name = value;
+
+
+// UPDATE table_name
+// SET column_name = value_1
+// WHERE id = id_value;
+
+
   // Post request for web registeration. It will add the user name, password and email to the database //
   app.post('/register', function(request, res) {
 	var username = request.body.username;
@@ -130,7 +168,11 @@ app.post('/auth', function(request, response) {
 	}
 });
 
-
+//
+//
+// Need to Change.
+//
+//
 
 // Reading Data From the Database and sending the Data Page if session is active //
 app.get("/data", function(req, res) {  
@@ -148,6 +190,28 @@ app.get("/data", function(req, res) {
   //  res.end();
 //}
 });
+
+app.get("/delete/:id", (req, res) => {
+    const id = req.params.id;
+    const sql = "SELECT * FROM crash_data WHERE collision_id = ?";
+    nodeDB.get(sql, id, (err, row) => {
+      if (err) {
+        return console.error(err.message);
+      }
+      res.render("delete", { model: row });
+    });
+  });
+  
+app.post("/delete/:id", (req, res) => {
+    const id = req.params.id;
+    const sql = "DELETE FROM crash_data WHERE collision_id = ?";
+    nodeDB.run(sql, id, err => {
+      if (err) {
+        return console.error(err.message);
+      }
+      res.render("deleted");
+    });
+  });
 
 // Sending Login Page if there is no active session //
 app.get('/login', function(request, response) {
@@ -169,7 +233,17 @@ app.get('/register', function(request, response) {
 	response.end();
 });
 
-// Sending Register Page if the user is in active session //
+// Sending Profile Page if there is no active session //
+app.get('/profile', function(request, response) {
+    if (request.session.loggedin) {
+        response.render("profile");
+    } else {
+		response.send('You are not logged in!');
+	}
+	response.end();
+});
+
+// Sending Logout Page if the user is in active session //
 app.get('/logout', function(request, response) {
     if (request.session.loggedin) {
       request.session.destroy()
