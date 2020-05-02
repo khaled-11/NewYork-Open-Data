@@ -42,6 +42,7 @@
 <thead>
   <tr>
     <th>ID</th>
+    <th>Crash Date</th>
     <th>Crash Time</th>
     <th>Borough</th>
     <th>Zip Code</th>
@@ -56,6 +57,7 @@
   <% for (const crash_data of model) { %>
     <tr>
       <td><%= crash_data.collision_id %></td>
+      <td><%= crash_data.crash_date %></td>
       <td><%= crash_data.crash_time %></td>
       <td><%= crash_data.borough %></td>
       <td><%= crash_data.zip_code %></td>

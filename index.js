@@ -84,7 +84,7 @@ let nodeDB = new sqlite3.Database(file_path, (err) => {
                              for(var j = 0; j < dataReceived.length; j++)
                              {
                                  nodeDB.run(
-                                    "INSERT INTO crash_data(collision_id,crash_date,crash_time,borough,zip_code,on_street_name,number_of_persons_injured,number_of_persons_killed,contributing_factor_vehicle_1, vehicle_type_code1) VALUES('"+dataReceived[j].collision_id+"','"+dataReceived[j].crash_date+"','"+dataReceived[j].crash_time+"','"+dataReceived[j].borough+"','"+dataReceived[j].zip_code+"','"+dataReceived[j].on_street_name+"','"+dataReceived[j].number_of_persons_injured+"','"+dataReceived[j].number_of_persons_killed+"','"+dataReceived[j].contributing_factor_vehicle_1+"','"+dataReceived[j].vehicle_type_code1+"')")
+                                    "INSERT INTO crash_data(collision_id,crash_date,crash_time,borough,zip_code,on_street_name,number_of_persons_injured,number_of_persons_killed,contributing_factor_vehicle_1, vehicle_type_code1) VALUES('"+dataReceived[j].collision_id+"',SUBSTR('"+dataReceived[j].crash_date+"',0,11),'"+dataReceived[j].crash_time+"','"+dataReceived[j].borough+"','"+dataReceived[j].zip_code+"','"+dataReceived[j].on_street_name+"','"+dataReceived[j].number_of_persons_injured+"','"+dataReceived[j].number_of_persons_killed+"','"+dataReceived[j].contributing_factor_vehicle_1+"','"+dataReceived[j].vehicle_type_code1+"')")
                          }});                   
                 }});    
     }});
