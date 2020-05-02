@@ -153,7 +153,7 @@ app.post('/auth', function(request, response) {
 			response.end();
 		});
 	} else {
-		response.send('Please enter Username and Password!');
+		response.render("incorrect");
 		response.end();
 	}
 });
